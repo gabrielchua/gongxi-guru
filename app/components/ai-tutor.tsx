@@ -6,6 +6,8 @@ import { TUTOR_PROMPT } from "@/app/prompts/tutor-prompt"
 import { motion, AnimatePresence } from "framer-motion"
 import { Mic, StopCircle, Gift, Sparkles } from "lucide-react"
 
+const SESSION_TIME_LIMIT_SECONDS = 300 // 3 minutes
+
 interface AITutorProps {
   onGreetingLearned: () => void
 }
@@ -16,7 +18,7 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
   const [transcript, setTranscript] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [sessionActive, setSessionActive] = useState(false)
-  const [timeLeft, setTimeLeft] = useState<number>(180)
+  const [timeLeft, setTimeLeft] = useState<number>(SESSION_TIME_LIMIT_SECONDS)
   const [timeoutMessage, setTimeoutMessage] = useState("")
   const [showRedPacket, setShowRedPacket] = useState(false)
   const peerConnection = useRef<RTCPeerConnection | null>(null)
@@ -59,7 +61,7 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
     setIsConnected(false);
     setSessionActive(false);
     setIsSpeaking(false);
-    setTimeLeft(180);
+    setTimeLeft(SESSION_TIME_LIMIT_SECONDS);
     if (sessionActive) {
       setTimeoutMessage("Thank you for practicing! 新年快乐! 🎊");
     }
@@ -162,7 +164,7 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
       // Set 2-minute timer
       sessionTimer.current = setTimeout(() => {
         cleanupWebRTC();
-      }, 120000);
+      }, SESSION_TIME_LIMIT_SECONDS * 1000);
 
     } catch (err: any) {
       console.error("WebRTC initialization failed:", err)
