@@ -10,8 +10,12 @@ import { greetings, shuffleArray } from "@/data/greetings"
 export default function Home() {
   const [currentGreetingIndex, setCurrentGreetingIndex] = useState(0)
   const [showAITutor, setShowAITutor] = useState(false)
-  const [shuffledGreetings] = useState(() => shuffleArray(greetings))
+  const [shuffledGreetings, setShuffledGreetings] = useState(greetings)
   const [isFlipped, setIsFlipped] = useState(false)
+
+  useEffect(() => {
+    setShuffledGreetings(shuffleArray(greetings))
+  }, [])
 
   const nextGreeting = () => {
     setCurrentGreetingIndex((prevIndex) => (prevIndex + 1) % shuffledGreetings.length)
