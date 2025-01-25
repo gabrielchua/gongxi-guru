@@ -99,7 +99,7 @@ export function Home() {
   return (
     <div className="flex flex-col items-center justify-start min-h-full gap-4 pt-2 md:pt-8">
       <h1 className="text-3xl sm:text-4xl font-bold text-yellow-100">🍊 新 年 快 乐 🧧</h1>
-      <h2 className="text-lg sm:text-xl font-medium text-yellow-100/90 mb-4">Welcome to the CNY dojo</h2>
+      <h2 className="text-lg sm:text-xl font-medium text-yellow-100/90 mb-4">Welcome to the Gongxi Guru</h2>
       {showAITutor ? (
         <>
           <AITutor onGreetingLearned={() => setShowAITutor(false)} />
