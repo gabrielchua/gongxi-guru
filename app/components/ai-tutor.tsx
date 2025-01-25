@@ -16,7 +16,7 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
   const [transcript, setTranscript] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [sessionActive, setSessionActive] = useState(false)
-  const [timeLeft, setTimeLeft] = useState<number>(120)
+  const [timeLeft, setTimeLeft] = useState<number>(180)
   const [timeoutMessage, setTimeoutMessage] = useState("")
   const [showRedPacket, setShowRedPacket] = useState(false)
   const peerConnection = useRef<RTCPeerConnection | null>(null)
@@ -59,7 +59,7 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
     setIsConnected(false);
     setSessionActive(false);
     setIsSpeaking(false);
-    setTimeLeft(120);
+    setTimeLeft(180);
     if (sessionActive) {
       setTimeoutMessage("Thank you for practicing! 新年快乐! 🎊");
     }
