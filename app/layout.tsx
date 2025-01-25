@@ -3,7 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Providers } from "./providers"
 import { Analytics } from "@vercel/analytics/react"
-import { SpeedInsights } from "@vercel/speed-insights/next"
+// import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -29,7 +29,7 @@ export default function RootLayout({
             Built by <a href="https://gabrielchua.me" className="underline hover:text-yellow-100" target="_blank" rel="noopener noreferrer">Gabriel Chua</a> with o1 Pro and Cursor
           </div>
           <Analytics />
-          <SpeedInsights />
+          {/* <SpeedInsights /> */}
         </Providers>
       </body>
     </html>

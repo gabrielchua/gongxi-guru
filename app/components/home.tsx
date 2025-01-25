@@ -142,6 +142,7 @@ export function Home() {
               <Mic className="mr-3 h-5 w-5 group-hover:scale-110 transition-transform duration-300" />
               Practice
             </Button>
+            <p className="text-sm text-yellow-100/80 text-center mt-2">Works best on Desktop and Chrome browser</p>
           </div>
         </>
       )}
