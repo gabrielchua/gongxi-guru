@@ -3,6 +3,7 @@ import type { Metadata } from "next"
 import { Inter } from "next/font/google"
 import { Providers } from "./providers"
 import { Analytics } from "@vercel/analytics/react"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 
 const inter = Inter({ subsets: ["latin"] })
 
@@ -24,10 +25,11 @@ export default function RootLayout({
           <main className="px-4 py-2 min-h-screen relative">
             {children}
           </main>
-          <div className="absolute bottom-2 text-center text-xs text-black w-full hover:text-black/80 transition-colors duration-300">
+          <div className="absolute bottom-2 text-center text-xs text-yellow-100/80 w-full hover:text-yellow-100 transition-colors duration-300">
             Built by <a href="https://gabrielchua.me" className="underline hover:text-yellow-100" target="_blank" rel="noopener noreferrer">Gabriel Chua</a> with o1 Pro and Cursor
           </div>
           <Analytics />
+          <SpeedInsights />
         </Providers>
       </body>
     </html>
