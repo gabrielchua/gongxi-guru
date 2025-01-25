@@ -53,7 +53,7 @@ export function Home() {
 
     window.addEventListener('keydown', handleKeyPress)
     return () => window.removeEventListener('keydown', handleKeyPress)
-  }, [showAITutor])
+  }, [showAITutor, nextGreeting, previousGreeting, toggleFlip])
 
   const toggleAITutor = () => {
     setShowAITutor(!showAITutor)
