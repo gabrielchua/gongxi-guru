@@ -6,7 +6,6 @@ export interface Greeting {
 }
 
 export const greetings: Greeting[] = [
-  { chinese: "恭喜发财", pinyin: "Gōng Xǐ Fā Cái", english: "Wishing you prosperity", emoji: "💰" },
   { chinese: "万事如意", pinyin: "Wàn Shì Rú Yì", english: "May all your wishes come true", emoji: "🌟" },
   { chinese: "龙马精神", pinyin: "Lóng Mǎ Jīng Shén", english: "Wishing you the vigor and vitality of a dragon and horse", emoji: "🐲" },
   { chinese: "步步高升", pinyin: "Bù Bù Gāo Shēng", english: "May you climb higher and higher in your career", emoji: "🪜" },

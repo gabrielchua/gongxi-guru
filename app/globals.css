@@ -27,3 +27,15 @@ body {
   }
 }
 
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0deg); }
+  25% { transform: rotate(-1deg); }
+  75% { transform: rotate(1deg); }
+}
+
+@keyframes wiggle-energetic {
+  0%, 100% { transform: rotate(0deg) scale(1.05); }
+  25% { transform: rotate(-2deg) scale(1.05); }
+  75% { transform: rotate(2deg) scale(1.05); }
+}
+
