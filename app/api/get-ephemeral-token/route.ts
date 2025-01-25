@@ -1,6 +1,13 @@
 import { NextResponse } from "next/server"
+import { retry } from "@/app/utils/retry"
 
-export async function GET() {
+// Track token request metrics
+let tokenRequestCount = 0
+let tokenErrorCount = 0
+
+async function getOpenAIToken() {
+  tokenRequestCount++
+  
   try {
     const response = await fetch("https://api.openai.com/v1/realtime/sessions", {
       method: "POST",
@@ -15,15 +22,53 @@ export async function GET() {
     })
 
     if (!response.ok) {
+      tokenErrorCount++
       const errorText = await response.text()
-      throw new Error(`HTTP error! status: ${response.status}, body: ${errorText}`)
+      throw new Error(`OpenAI API error: ${response.status} - ${errorText}`)
     }
 
     const data = await response.json()
-    return NextResponse.json(data)
+    
+    if (!data.client_secret?.value) {
+      tokenErrorCount++
+      throw new Error("Invalid token structure received from OpenAI")
+    }
+
+    return data
   } catch (error) {
-    console.error("Failed to fetch ephemeral token:", error)
-    return NextResponse.json({ error: "Failed to fetch ephemeral token", details: error.message }, { status: 500 })
+    tokenErrorCount++
+    throw error
+  }
+}
+
+export async function GET() {
+  try {
+    // Use retry utility for token fetching
+    const data = await retry(getOpenAIToken, {
+      maxAttempts: 3,
+      delayMs: 1000,
+      backoff: true
+    })
+
+    // Add monitoring headers
+    const headers = new Headers({
+      'X-Token-Request-Count': tokenRequestCount.toString(),
+      'X-Token-Error-Count': tokenErrorCount.toString(),
+    })
+
+    return NextResponse.json(data, { headers })
+  } catch (error) {
+    console.error("All retry attempts failed:", error)
+    return NextResponse.json({ 
+      error: "Service temporarily unavailable. Please try again later.",
+      details: error.message 
+    }, { 
+      status: 500,
+      headers: {
+        'X-Token-Request-Count': tokenRequestCount.toString(),
+        'X-Token-Error-Count': tokenErrorCount.toString(),
+      }
+    })
   }
 }
 

@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button"
 import { TUTOR_PROMPT } from "@/app/prompts/tutor-prompt"
 import { motion, AnimatePresence } from "framer-motion"
 import { Mic, StopCircle, Gift, Sparkles } from "lucide-react"
+import { retry } from "@/app/utils/retry"
 
 const SESSION_TIME_LIMIT_SECONDS = 300 // 3 minutes
 
@@ -26,6 +27,15 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
   const audioElement = useRef<HTMLAudioElement | null>(null)
   const sessionTimer = useRef<NodeJS.Timeout | null>(null)
   const countdownTimer = useRef<NodeJS.Timeout | null>(null)
+  const tokenRefreshTimer = useRef<NodeJS.Timeout | null>(null)
+  const connectionAttempts = useRef(0)
+  
+  // Add monitoring state
+  const [metrics, setMetrics] = useState({
+    connectionAttempts: 0,
+    tokenRefreshes: 0,
+    errors: 0
+  })
 
   useEffect(() => {
     return () => {
@@ -35,6 +45,9 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
       }
       if (countdownTimer.current) {
         clearInterval(countdownTimer.current);
+      }
+      if (tokenRefreshTimer.current) {
+        clearInterval(tokenRefreshTimer.current)
       }
     }
   }, [])
@@ -65,6 +78,38 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
     if (sessionActive) {
       setTimeoutMessage("Thank you for practicing! 新年快乐! 🎊");
     }
+    
+    if (tokenRefreshTimer.current) {
+      clearInterval(tokenRefreshTimer.current)
+      tokenRefreshTimer.current = null
+    }
+    
+    connectionAttempts.current = 0
+  }
+
+  const refreshToken = async () => {
+    try {
+      const response = await fetch("/api/get-ephemeral-token")
+      const data = await response.json()
+      
+      if (data.error || !data.client_secret?.value) {
+        throw new Error(data.error || "Invalid token response")
+      }
+      
+      setMetrics(prev => ({
+        ...prev,
+        tokenRefreshes: prev.tokenRefreshes + 1
+      }))
+      
+      return data.client_secret.value
+    } catch (error) {
+      console.error("Token refresh failed:", error)
+      setMetrics(prev => ({
+        ...prev,
+        errors: prev.errors + 1
+      }))
+      throw error
+    }
   }
 
   /**
@@ -73,14 +118,19 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
    */
   async function initWebRTC() {
     try {
-      setTimeoutMessage("");
-      // Get ephemeral token
-      const tokenResponse = await fetch("/api/get-ephemeral-token")
-      if (!tokenResponse.ok) {
-        throw new Error(`Failed to fetch token: ${tokenResponse.statusText}`)
-      }
-      const { client_secret } = await tokenResponse.json()
-      const EPHEMERAL_KEY = client_secret.value
+      setTimeoutMessage("")
+      setError(null)
+      
+      setMetrics(prev => ({
+        ...prev,
+        connectionAttempts: prev.connectionAttempts + 1
+      }))
+
+      // Get initial token with retry
+      const EPHEMERAL_KEY = await retry(refreshToken, {
+        maxAttempts: 3,
+        delayMs: 1000
+      })
 
       // Initialize WebRTC
       const pc = new RTCPeerConnection({
@@ -166,9 +216,40 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
         cleanupWebRTC();
       }, SESSION_TIME_LIMIT_SECONDS * 1000);
 
+      // Set up token refresh every 4 minutes (assuming 5-minute token lifetime)
+      tokenRefreshTimer.current = setInterval(async () => {
+        try {
+          const newToken = await refreshToken()
+          // Implement token update logic here - might require reconnection
+          console.log("Token refreshed successfully")
+        } catch (error) {
+          console.error("Token refresh failed:", error)
+          cleanupWebRTC()
+          setError("Session expired. Please start a new session.")
+        }
+      }, 4 * 60 * 1000)
+
+      // Add connection monitoring
+      pc.oniceconnectionstatechange = () => {
+        console.log("ICE Connection State:", pc.iceConnectionState)
+        if (pc.iceConnectionState === "failed") {
+          setMetrics(prev => ({
+            ...prev,
+            errors: prev.errors + 1
+          }))
+          handleConnectionFailure()
+        }
+      }
+
     } catch (err: any) {
       console.error("WebRTC initialization failed:", err)
+      setMetrics(prev => ({
+        ...prev,
+        errors: prev.errors + 1
+      }))
       setError(err.message || "Failed to initialize WebRTC")
+      setSessionActive(false)
+      setIsConnected(false)
     }
   }
 
@@ -256,6 +337,24 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
     cleanupWebRTC();
   }
 
+  const handleConnectionFailure = async () => {
+    if (connectionAttempts.current >= 3) {
+      cleanupWebRTC()
+      console.error("Connection failed after multiple attempts")
+      setError("Connection failed after multiple attempts")
+      return
+    }
+
+    connectionAttempts.current++
+    console.log(`Attempting reconnection (${connectionAttempts.current}/3)...`)
+    
+    try {
+      await initWebRTC()
+    } catch (error) {
+      console.error("Reconnection failed:", error)
+    }
+  }
+
   return (
     <div className="w-full max-w-md mx-auto">
       <motion.div 
@@ -266,18 +365,6 @@ export function AITutor({ onGreetingLearned }: AITutorProps) {
       >
         <div className="absolute inset-0 bg-red-600/10 backdrop-blur-sm" />
         <div className="relative p-8">
-          {error && (
-            <motion.div 
-              className="bg-red-100 border-2 border-red-400 text-red-700 px-4 py-3 rounded-lg relative mb-4"
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              role="alert"
-            >
-              <strong className="font-bold">Error:</strong>
-              <span className="block sm:inline"> {error}</span>
-            </motion.div>
-          )}
-          
           <AnimatePresence>
             {sessionActive && timeLeft > 0 && (
               <motion.div 
