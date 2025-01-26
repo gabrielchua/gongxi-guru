@@ -16,4 +16,8 @@ A web application for Chinese New Year greetings and interactions.
 
 ## License
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details. 
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
+## Current Time in SGT
+
+The current time in SGT is: {{SGT_TIME}}
