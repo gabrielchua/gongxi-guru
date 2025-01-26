@@ -2,7 +2,7 @@ name: Update README with Current Time
 
 on:
   schedule:
-    - cron: "*/15 * * * *"
+    - cron: "*/15 * * * *" # Runs every 15 minutes
   push:
     branches:
       - main
@@ -13,26 +13,39 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v3
+        with:
+          fetch-depth: 0 # Ensures full history is fetched for proper git operations
 
       - name: Set up Node.js
-        uses: actions/setup-node@v2
+        uses: actions/setup-node@v3
         with:
           node-version: '14'
 
-      - name: Update README with current time
+      - name: Update README with current SGT time
         run: |
-          CURRENT_TIME=$(TZ=Asia/Singapore date)
-          sed -i "s/{{SGT_TIME}}/$CURRENT_TIME/" README.md
+          # Get current time in Singapore Time (SGT)
+          CURRENT_TIME=$(TZ=Asia/Singapore date '+%Y-%m-%d %H:%M:%S SGT')
+          
+          # Remove the last line of README.md
+          sed -i '$ d' README.md
+          
+          # Append the current SGT time as the new last line
+          echo "Last Updated: $CURRENT_TIME" >> README.md
 
       - name: Commit changes
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          # Configure Git with a username and email
           git config --global user.name 'github-actions[bot]'
           git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # Stage the changes
           git add README.md
-          git commit -m "Update README with current time in SGT"
-          git push
-
-      - name: Trigger Vercel Deployment
-        run: |
-          curl -X POST https://api.vercel.com/v1/integrations/deploy/prj_<your_project_id> -H "Authorization: Bearer <your_token>"
+          
+          # Commit with a message
+          git commit -m "Update README to re-deploy" || echo "No changes to commit"
+          
+          # Push changes using the GITHUB_TOKEN for authentication
+          git push https://x-access-token:${GITHUB_TOKEN}@github.com/${{ github.repository }}.git HEAD:main
