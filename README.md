@@ -20,4 +20,4 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## Current Time in SGT
 
-The current time in SGT is: {{SGT_TIME}}
+Last Updated: 2025-01-26 16:10:12 SGT
