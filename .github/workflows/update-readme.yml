@@ -1,0 +1,38 @@
+name: Update README with Current Time
+
+on:
+  schedule:
+    - cron: "*/15 * * * *"
+  push:
+    branches:
+      - main
+
+jobs:
+  update-readme:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14'
+
+      - name: Update README with current time
+        run: |
+          CURRENT_TIME=$(TZ=Asia/Singapore date)
+          sed -i "s/{{SGT_TIME}}/$CURRENT_TIME/" README.md
+
+      - name: Commit changes
+        run: |
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          git add README.md
+          git commit -m "Update README with current time in SGT"
+          git push
+
+      - name: Trigger Vercel Deployment
+        run: |
+          curl -X POST https://api.vercel.com/v1/integrations/deploy/prj_<your_project_id> -H "Authorization: Bearer <your_token>"
