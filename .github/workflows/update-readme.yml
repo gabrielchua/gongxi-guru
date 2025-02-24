@@ -2,8 +2,7 @@ name: Update README with Current Time
 
 on:
   schedule:
-    - cron: "0 */3 * * *"    # Runs at minute 0 past every 3rd hour (e.g., 00:00, 03:00, 06:00, ...)
-    - cron: "30 */3 * * *"   # Runs at minute 30 past every 3rd hour (e.g., 01:30, 04:30, 07:30, ...)
+    - cron: "0 * * * *"    # Runs at minute 0 of every hour
 
 jobs:
   update-readme:
